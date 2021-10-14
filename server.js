@@ -10,10 +10,18 @@ app.use(cookieSession({
   keys: ['key1', 'key2']
 }))
 
+const isLoggedIn = (req, res, next) => {
+    if (req.user) {
+        next();
+    } else {
+        res.sendStatus(401);
+    }
+}
+
 app.use(passport.initialize());
 app.use(passport.session());
 
-const port = process.env.PORT || 5000
+const port = process.env.PORT || 3000
 
 app.get("/", (req, res) => {
     res.json({message: "You are not logged in"})
@@ -22,7 +30,7 @@ app.get("/", (req, res) => {
 app.get("/failed", (req, res) => {
     res.send("Failed")
 })
-app.get("/success", (req, res) => {
+app.get("/success",isLoggedIn, (req, res) => {
     res.send(`Welcome ${req.user.email}`)
 })
 
@@ -42,5 +50,11 @@ app.get('/google/callback',
 
     }
 );
+
+app.get("/logout", (req, res) => {
+    req.session = null;
+    req.logout();
+    res.redirect('/');
+})
 
 app.listen(port, () => console.log("server running on port" + port))
